@@ -71,6 +71,7 @@ def tinyMazeSearch(problem):
     s = Directions.SOUTH
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
+
 def generate_graph_search(problem, fringe):
   fringe.push((problem.getStartState(), [], 0))
 
@@ -121,6 +122,7 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+    # state, roads, cost = node
     cost = lambda node: problem.getCostOfActions(node[1])
     fringe = util.PriorityQueueWithFunction(cost)
     return generate_graph_search(problem, fringe)
@@ -136,6 +138,7 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    # state, roads, cost = node
     cost = lambda node: problem.getCostOfActions(node[1]) + heuristic(node[0], problem)
     fringe = util.PriorityQueueWithFunction(cost)
     return generate_graph_search(problem, fringe)

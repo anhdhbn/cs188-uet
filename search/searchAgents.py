@@ -272,7 +272,7 @@ class CornersProblem(search.SearchProblem):
 
     You must select a suitable state space and successor function
     """
-
+ 
     def __init__(self, startingGameState):
         """
         Stores the walls, pacman's starting position and corners.
@@ -288,7 +288,6 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        self._visited = {}
 
     def getStartState(self):
         """
@@ -332,9 +331,7 @@ class CornersProblem(search.SearchProblem):
             "*** YOUR CODE HERE ***"
             x, y = startingPos
             dx, dy = Actions.directionToVector(action)
-            # print(x, y, dx, dy)
             nextx, nexty = int(x + dx), int(y + dy)
-            # print(nextx, nexty, self.walls[nextx][nexty])
 
             # Neu day khong phai la tuong
             if not self.walls[nextx][nexty]:
@@ -391,6 +388,8 @@ def cornersHeuristic(state, problem):
     # Bat dau tu vi tri hien tai, tinh khoang cach manhattan den cac dinh va lay ra khoang cach nho nhat,
     # Loai bo dinh do ra khoi mang, vi tri xuat phat la dinh vua bi loai bo, tinh khoang cach tu do den cach dinh con lai
     # cung lay ra khoang cach. Lap lai nhu the den khi het dinh.
+    # curr_corners : (1, 1) (1, 12) (28, 1) (28, 12)
+    # curr_pos = (5, 1)
     while curr_corners != []:
         x2, y2 = currentPos
         distances = []
@@ -400,7 +399,7 @@ def cornersHeuristic(state, problem):
         h += min(distances)
         currentPos = curr_corners[distances.index(min(distances))]
         curr_corners.remove(currentPos)
-
+    # print(h, state)
     return h # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
@@ -495,7 +494,7 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    if len(foodGrid.asList()) == 0:
+    if problem.isGoalState(state):
         return 0
     food_pos = []
 

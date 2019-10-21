@@ -72,9 +72,49 @@ class ReflexAgent(Agent):
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        oldFood = currentGameState.getFood()
+        """
+        Chung ta quan tam den 3 khia canh:
+          - khoang cach den ghost gan nhat, de tranh no ra.
+          - khoang cach den thuc an, pacman se an thuc an gan no nhat
+          - so luong thuc an, he so phat giup no an het thuc an
+        """
+        """
+        ghostCoef:
+          De pacman cang tranh xa ghost cang tot
+          trong khoang tu 1 den 20, tu 10 den 20 se dat diem cao nhat
+          neu he so qua cao, pacman se khong an duoc thuc an gan ghost
+        """
+        ghostDistance = 0
+        capsuleScore = 0
+        if len(currentGameState.getCapsules()) != 0:
+          closestCapsule = min([manhattanDistance(capsule, newPos) for capsule in currentGameState.getCapsules()])
+          if closestCapsule == 0:
+            capsuleScore = 1000
+          else:
+            capsuleScore += 100/closestCapsule
 
-        "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        closestghost = min([manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates])
+        
+        foodList = newFood.asList()
+        if len(foodList) != 0:
+            closestfood = min([manhattanDistance(newPos, food) for food in foodList])
+        else:
+            closestfood = 0
+
+        if(ghost.scaredTimer != 0):
+          if closestghost <= 1:            
+            ghostDistance += 500
+          else:
+            ghostDistance = 500/closestghost
+          score = (-1.4 * closestfood) + ghostDistance - (2*len(foodList)) + capsuleScore
+        else:
+          if closestghost <= 1:
+            ghostDistance -= 1000
+          else:          
+            ghostDistance = - 15/closestghost
+          score = (-1.4 * closestfood) + ghostDistance - (100*len(foodList)) + capsuleScore
+        return score
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -129,7 +169,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # ***                max
+        # ***           /-/   |   \--\
+        # ***          /      |       \
+        # ***         /       |        \
+        # ***      min1      min2      min3
+        # ***       /|\      /|\       /|\ 
+        # ***      / | \    / | \     / | \
+        # ***     A  B  C  D  E  F   G  H  I  
+        # ***     3 12  8  5  4  6  14  1  11
+
+        def minimaxSearch(state, agentIndex, depth):
+          # Neu la min layer va la ghost cuoi dung
+          if agentIndex == state.getNumAgents():
+            # neu la max depth
+            if depth == self.depth:
+              return self.evaluationFunction(state)
+            else:
+              # tao max layer voi depth = depth + 1
+              return minimaxSearch(state, 0, depth + 1)
+          else:
+            moves = state.getLegalActions(agentIndex)
+            if len(moves) == 0:
+              return self.evaluationFunction(state)
+            next = [minimaxSearch(state=state.generateSuccessor(agentIndex, move), agentIndex=(agentIndex +1), depth=depth) for move in moves]
+            if(agentIndex == 0):
+              return max(next)
+            else:
+              return min(next)
+        
+        return max(gameState.getLegalActions(0), key=lambda x: minimaxSearch(state=gameState.generateSuccessor(0, x), agentIndex=1, depth=1))
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
@@ -141,7 +210,58 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def alphabeta(state):
+          currentNode, bestAction, a, b  = None, None, None, None
+          for action in state.getLegalActions(0):
+            currentNode = max(currentNode, nodeMin(state.generateSuccessor(0, action), 1, 1, a, b))
+            if a is None:
+              a = currentNode
+              bestAction = action
+            else:
+              a, bestAction = max(currentNode, a), action if currentNode > a else bestAction
+          return bestAction
+
+        def nodeMin(state, agentIndex, depth, a, b):
+          if agentIndex == state.getNumAgents():
+            return nodeMax(state, 0, depth + 1, a, b)
+          temp_b = None
+          for action in state.getLegalActions(agentIndex):
+            currentNode = nodeMin(state.generateSuccessor(agentIndex, action), agentIndex + 1, depth, a, b)
+            if temp_b is None: temp_b = currentNode
+            else: temp_b = min(currentNode, temp_b)
+
+            if a is not None and temp_b < a:
+              return temp_b
+            
+            if b is None: b = temp_b
+            else: b = min(temp_b, b)
+
+          if temp_b is not None:
+            return temp_b
+          else:
+            return self.evaluationFunction(state)
+
+        def nodeMax(state, agentIndex, depth, a, b):
+            if depth > self.depth:
+              return self.evaluationFunction(state)
+            temp_a = -9999999
+            for action in state.getLegalActions(agentIndex):
+              currentNode = nodeMin(state.generateSuccessor(agentIndex, action), agentIndex + 1, depth, a, b)
+              temp_a = max(temp_a, currentNode)
+              # tren node Max la node Min
+              # Node min se update gia tri b
+              # Neu a < b thi return luon a cat nhanh con lai
+              if b is not None and temp_a > b:
+                return temp_a
+              # nguoc lai, cap nhat gia tri max cua a
+              a = max(a, temp_a)
+
+
+            if temp_a != -9999999:
+              return temp_a
+            else:
+              return self.evaluationFunction(state)
+        return alphabeta(gameState)
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -156,7 +276,31 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
           legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def expectimaxSearch(state, agentIndex, depth):
+          # Neu la min layer va la ghost cuoi dung
+          if agentIndex == state.getNumAgents():
+            # neu la max depth
+            if depth == self.depth:
+              return self.evaluationFunction(state)
+            # tao max layer voi depth = depth + 1
+            else:
+              return expectimaxSearch(state, 0, depth + 1)
+          else:
+            moves = state.getLegalActions(agentIndex)
+            if len(moves) == 0:
+              return self.evaluationFunction(state)
+            next = [expectimaxSearch(state.generateSuccessor(agentIndex, m), agentIndex + 1, depth) for m in moves]
+
+            if agentIndex == 0:
+              return max(next)
+            else:
+              # khong dung min nua ma dung avg
+              return sum(next) / len(next)
+
+        result = max(gameState.getLegalActions(0), key=lambda x: expectimaxSearch(gameState.generateSuccessor(0, x), 1, 1))
+
+        return result
+
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -166,7 +310,54 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    oldFood = currentGameState.getFood()
+    """
+    Chung ta quan tam den 3 khia canh:
+      - khoang cach den ghost gan nhat, de tranh no ra.
+      - khoang cach den thuc an, pacman se an thuc an gan no nhat
+      - so luong thuc an, he so phat giup no an het thuc an
+    """
+    """
+    ghostCoef:
+      De pacman cang tranh xa ghost cang tot
+      trong khoang tu 1 den 20, tu 10 den 20 se dat diem cao nhat
+      neu he so qua cao, pacman se khong an duoc thuc an gan ghost
+    """
+    ghostDistance = 0
+    capsuleScore = 0
+    if len(currentGameState.getCapsules()) != 0:
+      closestCapsule = min([manhattanDistance(capsule, newPos) for capsule in currentGameState.getCapsules()])
+      if closestCapsule == 0:
+        capsuleScore = 1000
+      else:
+        capsuleScore += 200/closestCapsule
+
+    closestghost = min([manhattanDistance(newPos, ghost.getPosition()) for ghost in newGhostStates])
+    
+    foodList = newFood.asList()
+    if len(foodList) != 0:
+        closestfood = min([manhattanDistance(newPos, food) for food in foodList])
+    else:
+        closestfood = 0
+
+    if(ghost.scaredTimer != 0):
+      capsuleScore = -300
+      if closestghost <= 1:            
+        ghostDistance += 350
+      else:
+        ghostDistance = 200/closestghost
+      score = (-1.3 * closestfood) + ghostDistance - (3*len(foodList)) + capsuleScore
+    else:
+      if closestghost <= 1:
+        ghostDistance -= 1000
+      else:          
+        ghostDistance = - 13/closestghost
+      score = (-1.3 * closestfood) + ghostDistance - (95*len(foodList)) + capsuleScore
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction

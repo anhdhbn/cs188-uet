@@ -349,7 +349,7 @@ def betterEvaluationFunction(currentGameState):
       if closestghost <= 1:            
         ghostDistance += 350
       else:
-        ghostDistance = 200/closestghost
+        ghostDistance = 250/closestghost
       score = (-1.3 * closestfood) + ghostDistance - (3*len(foodList)) + capsuleScore
     else:
       if closestghost <= 1:

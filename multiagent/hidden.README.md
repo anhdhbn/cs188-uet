@@ -134,7 +134,7 @@ def expectimaxSearch(state, agentIndex, depth):
       return max(next)
     else:
       # khong dung min nua ma dung avg
-      return sum(next) / len(next)
+      return sum(next) / len(next) 
 
 ```
 

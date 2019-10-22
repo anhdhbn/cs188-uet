@@ -101,7 +101,7 @@ class ReflexAgent(Agent):
             closestfood = min([manhattanDistance(newPos, food) for food in foodList])
         else:
             closestfood = 0
-
+        
         if(ghost.scaredTimer != 0):
           if closestghost <= 1:            
             ghostDistance += 500
@@ -255,8 +255,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return temp_a
               # nguoc lai, cap nhat gia tri max cua a
               a = max(a, temp_a)
-
-
+            print(temp_a)
             if temp_a != -9999999:
               return temp_a
             else:

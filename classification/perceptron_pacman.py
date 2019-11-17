@@ -45,15 +45,20 @@ class PerceptronClassifierPacman(PerceptronClassifier):
         self.features = trainingData[0][0]['Stop'].keys() # could be useful later
         # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING, OR
         # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
-
+        # data[0] = ({'West': {'foodCount': 96}, 'East': {'foodCount': 96}, 'Stop': {'foodCount': 97}}, ['West', 'Stop', 'East'])
+        # data[0][0] = {'West': {'foodCount': 96}, 'East': {'foodCount': 96}, 'Stop': {'foodCount': 97}}
+        # data[0][1] = ['West', 'Stop', 'East']
+        # data[0][label].items() = [('foodCount', 96)]
+        
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
                 "*** YOUR CODE HERE ***"
-                for data, correct in zip(trainingData, trainingLabels):
-                    for label in data[1]:
-                        for feature, value in data[0][label].items():
-                            if label == correct:
-                                self.weights[feature] += value
-                            else:
-                                self.weights[feature] -= value
+
+                f = trainingData[i][0]
+                (score, label) = max([(f[label] * self.weights, label) for label in f.keys()])
+
+                if(label != trainingLabels[i]):
+                    self.weights += f[trainingLabels[i]]
+                    self.weights -= f[label]
+        

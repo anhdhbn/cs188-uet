@@ -72,11 +72,11 @@ def enhancedFeatureExtractorDigit(datum):
     for this datum (datum is of type samples.Datum).
 
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-
+    Tim cac vung
+    Co the co 1, 2, 3 vung
     ##
     """
     features =  basicFeatureExtractorDigit(datum)
-
     "*** YOUR CODE HERE ***"
     regions = 0
     marked = [[0 for j in range(DIGIT_DATUM_HEIGHT)] for i in range(DIGIT_DATUM_WIDTH)]
@@ -89,24 +89,22 @@ def enhancedFeatureExtractorDigit(datum):
     features[2] = 0
     features[3] = 0
     features[regions] = 1
-    
     return features
 
-def pixArray(datum, x,y, marked):
+def pixArray(datum, x, y, marked):
     marked[x][y] = 1
     next = []
-    napp = next.append
     if(x != 0):
-        napp((x-1, y))
+        next.append((x-1, y))
     if(x !=  DIGIT_DATUM_WIDTH - 1):
-        napp((x+1, y))
+        next.append((x+1, y))
     if(y != 0):
-        napp((x, y-1))
+        next.append((x, y-1))
     if(y !=  DIGIT_DATUM_HEIGHT - 1):
-        napp((x, y+1))
+        next.append((x, y+1))
     for (px, py) in next:
-      if(datum.getPixel(px,py) == 0 and marked[px][py] == 0):
-        marked = pixArray(datum, px, py, marked)
+        if(datum.getPixel(px,py) == 0 and marked[px][py] == 0):
+            marked = pixArray(datum, px, py, marked)
     return marked
 
 def basicFeatureExtractorPacman(state):
@@ -150,31 +148,32 @@ def enhancedPacmanFeatures(state, action):
     features = util.Counter()
     "*** YOUR CODE HERE ***"
     features["STOP"] = int(action == Directions.STOP) * 100
-
     successor = state.generateSuccessor(0, action)
     pac_pos = successor.getPacmanPosition()
     ghosts = successor.getGhostPositions()
     capsules = successor.getCapsules()
     state_food = state.getFood()
+    ghostStates = successor.getGhostStates()
+
     food = [(x, y) for x, row in enumerate(state_food) for y, food in enumerate(row) if food]
 
+    
     nearest_ghosts = sorted([util.manhattanDistance(pac_pos, i) for i in ghosts])
-    features["nearest_ghost"] = nearest_ghosts[0] * 1.0
-    for i in xrange(min(len(nearest_ghosts), 1)):
-        features[("ghost", i)] = 5 / (0.1 + nearest_ghosts[i])
+    features["nearest_ghost"] = 0 if len(nearest_ghosts) == 0 else nearest_ghosts[0] * 1.0
 
     nearest_caps = sorted([util.manhattanDistance(pac_pos, i) for i in capsules])
+    features["nearest_capsule"] = 0 if len(nearest_caps) == 0 else nearest_caps[0] * 1.0
+    features["capsule_count"] = len(capsules) * 10
     for i in xrange(min(len(nearest_caps), 1)):
         features[("capsule", i)] = 15 / (1 + nearest_caps[i])
 
+
     nearest_food = sorted([util.manhattanDistance(pac_pos, i) for i in food])
-    for i, weight in zip(xrange(min(len(nearest_food), 5)), [1.3, 0.8] + [0.9] * 3):
+
+    for i, weight in zip(xrange(min(len(nearest_food), 5)), [1.3, 0.8] + [0.91] * 3):
         features[("food", i)] = weight * nearest_food[i]
 
-    features["capsule count"] = len(capsules) * 10
-    features["win"] = state.isWin()
-    features["lose"] = state.isLose()
-    features["score"] = state.getScore() * 10
+    features['scare_times'] = sum([(ghost.scaredTimer == 0) for ghost in ghostStates]) * 10
     return features
 
 

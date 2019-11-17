@@ -92,7 +92,6 @@ class MiraClassifier:
         sub = wypred-wytrue
         nominator = sub*f+1
         denominator = f*f*2
-        #print 'tmp', nominator, denominator, 1.0*nominator/denominator
         return min(c, 1.0*nominator/denominator)
 
     def get_accuracy(self, weights, validationData, validationLabels):
